@@ -1,7 +1,3 @@
-
-
-
-
 In this section, we will explore population dynamics of multiple interacting species; or more generally, dynamics in multiple variables.  Previously, our only _dynamic_ variable was a single focal population, sometimes called `x`, or squirrels, that could change over time in response to how many other squirrels there were.  All other aspects of system were fixed: such as the environmental conditions responsible for determining the growth rate `r` and carrying capacity `K`.  In this exercise, you will explore what happens when we start accounting for multiple species interacting with each other.
 
 We motivate this using an example of a classic data set that played a fundamental role in the early part of the previous centry in defining both our understanding of population dynamics and the mathematical field of dynamical systems more generally. As mentioned last week, this example comes from records of the Hudson Bay fur trapping company on the prevelance of Canadian Lynx and Snowshoe Hare populations.  The key thing to understand about the interaction between these two species is illustrated below:
@@ -15,6 +11,9 @@ Though we will focus on simulating our own data with `for` loops and functions, 
 
 ```{r}
 library(tidyverse)
+```
+
+```{r}
 data <- read_delim("https://raw.githubusercontent.com/bblais/Systems-Modeling-Spring-2015-Notebooks/master/data/Lynx%20and%20Hare%20Data/lynxhare.csv",
                 ";") 
 data %>%
@@ -32,10 +31,9 @@ data %>%
 
 We refer to writing down either equations or code that describe this population as a "model" of the population.  Mathematical models play a central role in almost all applications of data science, and come in many forms and serve many purposes.  
 
-In the Foundation core, you have recently encountered "linear models" and the regressions we use to estimate them from data.  
 
-$$x_{t+1} = x_t + x_t  f(x,y) $$
-$$y_{t+1} = y_t + y_t  g(x,y) $$
+$$H_{t+1} = H_t + H_t  f(H,P) $$
+$$P_{t+1} = P_t + P_t  g(H,P) $$
 
 
 
@@ -44,8 +42,9 @@ $$y_{t+1} = y_t + y_t  g(x,y) $$
 
 1.  Define the following mathematical functions in R:
 
-$$f(x,y) = a x - b y x$$
-$$g(x,y) = c x y - d y$$
+$$f(H,P) = a - b P $$
+$$g(H,P) = c H  - d $$
+
 
 2. Write a loop to simulate the following dynamics using the above functions definitions:
 
@@ -55,30 +54,23 @@ $$y_{t+1} = y_t + y_t  g(x,y) $$
 Use the following parameters to get started:
 
 ```
-a = 0.005
-b = 0.0002
-c = 0.0009
-d = .03
-T = 2000
+a = 0.01
+b = 0.01
+c = 0.01
+d = 0.01
 ```
 
-use initial value $x_0 = 30$ and $y_0 = 4$ to get started.
+use initial value $x_0 = 1.1$ and $y_0 = 1.1$ and a max time of $500$ iterations to get started.
 
 
 3. Create a plot showing the population sizes of hare (x) and lynx (y) over time.
 
-4. Create a plot showing hare population as the x axis and y population as the y axis.  This is called a "Phase plane".  
 
-5. Describe the general pattern you observe in the dynamics illustrated in the above plots.
-
-6. One by one, vary each of the above parameters `a`, `b`, `c` and `d`.  Try and predict how the dynamics might change as you change each parameter.  Describe in words the role see each parameter play in the model.  
+4.  Increase the time interval to 600, 700, 800, 900.  What happens?  Vary the starting conditions. What do you see?  
 
 
 
 
-```python
-
-```
 
 ## Exercise 2: Modifiying the model: Carrying capacity
 
@@ -88,9 +80,15 @@ In the model of exercise 1, the only thing limiting the growth of hare was the p
 
 1. re-define the function for hare population, `f(x,y)`, to reflect limits on growth due to a carrying capacity:
 
-$$f(x,y) = a x (1 - x/K) - b y x $$
 
-2. Re-run your model and plots.  How have the results changed?  
+$$f(x,y) = a  (1 - H/K) - b P $$
+
+
+2. Re-run your model and plot the results.  How have the results changed?  
+
+
+3. Plot the hare population size vs the linx population size, using `geom_path()`.  This is called a Phase Plane
+
 
 3. Can you obtain stable long-term behavior?  What behavior do you see?
 
@@ -101,30 +99,37 @@ $$f(x,y) = a x (1 - x/K) - b y x $$
 
 Another limitation of our model is the ability of the Lynx population to consume hare at arbitrary effiency, regardless of how many hare we have.  Thus a very small initial number of lynx, `y` can almost immediately become as large as you like as long as there are enough hares. When prey is rare, we might well expect the survival and reproduction of a lynx to be directly proportional to the number of hare, $g(x,y) ~ c x y$, but beyond a certain point we expect additional hare not to matter so much.  Likewise, it may make sense to put an upper limit on how many hare a single lynx can catch.  We model this by introducing a "saturating" function:
 
-$h(x) = \frac{1}{S + x}$ to our equations for $f$ and $g$:  
+$h(H) = \frac{1}{s + H}$ to our equations for $f$ and $g$:  
 
-$$ f(x,y) = a x (1 - x / K)  - b y x h(x)$$
-$$ g(x,y) = c y x h(x) - d y$$
+$$ f(H,P) = a (1 - H / K)  - b \cdot P \cdot h(H) $$
+$$ g(H,P) = c \cdot H \cdot h(H) - d $$
 
-Note that $h(x)$ is designed to have the following property:  when $x \ll S$, $h(x) ~ \frac{1}{S} = 1$, and is thus just a constant; independent of $x$.  Meanwhile, once $x \gg S$, then $h(x) ~ 1/x$. This cancels out the $x$ term in the products describing the death of hare ($b y x h(x)$) and growth of the Lynx ($c y x h(x)$) independent of $x$.  
+Note that $h(x)$ is called a *functional response*, or handling time.  
 
 1.  Introduce the above definition into your simulation, creating both phase portrait and time series plot.  Begin with the following parameter set:
 
 ```
-a = 0.05
-b = 0.02
-c = 0.09
-d = .03
-T = 2000
-K = 100
-S = 50
+a = 0.01
+b = 0.01
+c = 0.01
+d = 0.01
+k = 10
+s = 5
 ```
+
+
+
+
+
 
 2. You should now see that the population settles into a steady set of oscillations.  Try several different starting points for the initial conditions, (showing your results) and describe the resulting dynamics.  Try starting conditions that appear both inside and outside the "stable limit cycle" that emerges in your phase portrait plot.  
 
+
 3. Vary the growth rate for hares, `a`.  Which species increases most do to `a` increasing?  Why?  Now vary `K` and compare.
 
-4.  Increase S to be closer to `K`.  What happens?  Can you pinpoint when the transition occurs?
+4.  Increase s to be closer to `K`.  What happens?  Can you pinpoint when the transition occurs?
+
+
 
 5. Decrease S to smaller and smaller values.  What happens?  
 
